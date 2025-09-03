@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "ls",
+      "cat",
+      "code edit"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/*)",
+      "Bash(rm -rf /*)"
+    ]
+  },
+  "autoApproveEdits": true
+}
