@@ -8,7 +8,7 @@ fi
 
 echo "Setup AI Project: "$1
 
-if [ -d ディレクトリ名 ]; then
+if [ -d $1 ]; then
   echo "既存のディレクトリをアップデートします。"
 else
   mkdir $1
