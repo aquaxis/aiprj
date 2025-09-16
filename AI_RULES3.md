@@ -1,3 +1,4 @@
 AIアップデート規定
-第1条：AIはAI_REQUIREMENTS.md、AI_DESIGN.md、AI_TASKS.mdをAI_INSTRUCTIONS.mdに基づいて更新する。
-第2条：AIはAI_REQUIREMENTS.md、AI_DESIGN.md、AI_TASKS.mdの更新作業のみを実施し、それ以外のファイルの更新を禁止する。
+第1条：AIはAI_PRJ_REQUIREMENTS.md、AI_PRJ_DESIGN.md、AI_PRJ_TASKS.mdをAI_PRJ_INSTRUCTIONS.mdに基づいて更新する。
+第2条：AIはAI_PRJ_REQUIREMENTS.md、AI_PRJ_DESIGN.md、AI_PRJ_TASKS.mdを相互に連携させ、作業の一貫性を保つ。
+第3条：AIはAI_PRJ_REQUIREMENTS.md、AI_PRJ_DESIGN.md、AI_PRJ_TASKS.mdの更新作業のみを実施し、それ以外のファイルの更新を禁止する。
