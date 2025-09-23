@@ -1,5 +1,7 @@
 #!/bin/bash
 
+INSTALL_PATH=~/.local/share/aiprj
+
 if [ -z "$1" ]; then
   echo "引数がありません。"
   echo "[Usage] "$0" 作成するディレクトリ名"
@@ -14,15 +16,15 @@ else
   mkdir $1
 fi
 
-cp -r .claude $1/
-cp -r .gemini $1/
+cp -r $INSTALL_PATH/.claude $1/
+cp -r $INSTALL_PATH/.gemini $1/
 
-cp .mcp.json $1/
-cp AI_* $1/
+cp $INSTALL_PATH/.mcp.json $1/
+cp $INSTALL_PATH/AI_* $1/
 
 if [ -f $1/.gitignore ]; then
   cat $1/.gitignore $1/.gitignore.org
-  cat .gitignore.org $1/.gitignore.org > $1/.gitignore
+  cat $INSTALL_PATH/.gitignore.org $1/.gitignore.org > $1/.gitignore
 else
-  cat .gitignore.org > $1/.gitignore
+  cat $INSTALL_PATH/.gitignore.org > $1/.gitignore
 fi
