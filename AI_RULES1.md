@@ -2,4 +2,4 @@ AIプロジェクト規定
 第1条：AI_PRJ_REQUIREMENTS.mdは要件定義書であり、存在しない場合は新規作成する。
 第2条：AI_PRJ_DESIGN.mdは設計仕様書となる設計ドキュメントであり、存在しない場合は新規作成する。
 第3条：AI_PRJ_TASKS.mdは実装タスクや作業指示リストであり、存在しない場合は新規作成する。
-第4条：AI_PRJ_REQUIREMENTS.md、AI_PRJ_DESIGN.md、AI_PRJ_TASKS.mdのドキュメントを作成のみを作業とし、その他のファイルの作成や更新を禁止する。
+第4条：AI_INSTRUCTIONS.mdに記載の作業用にAI_PRJ_REQUIREMENTS.md、AI_PRJ_DESIGN.md、AI_PRJ_TASKS.mdのドキュメント作成のみを作業とし、その他のファイルの作成や更新を禁止する。
