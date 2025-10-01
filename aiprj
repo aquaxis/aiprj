@@ -23,7 +23,7 @@ cp $INSTALL_PATH/.mcp.json $1/
 cp $INSTALL_PATH/AI_* $1/
 
 if [ -f $1/.gitignore ]; then
-  cat $1/.gitignore $1/.gitignore.org
+  cat $1/.gitignore > $1/.gitignore.org
   cat $INSTALL_PATH/.gitignore.org $1/.gitignore.org > $1/.gitignore
 else
   cat $INSTALL_PATH/.gitignore.org > $1/.gitignore
