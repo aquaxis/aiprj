@@ -22,6 +22,11 @@ cp -r $INSTALL_PATH/.aiprj $1/
 
 cp $INSTALL_PATH/.mcp.json $1/
 
+if [ -f $1/AI_INSTRUCTIONS.md ]; then
+else
+  cat $INSTALL_PATH/AI_INSTRUCTIONS.md > $1/AI_INSTRUCTIONS.md
+fi
+
 if [ -f $1/.gitignore ]; then
   cat $1/.gitignore > $1/.gitignore.org
   cat $INSTALL_PATH/.gitignore.org $1/.gitignore.org > $1/.gitignore
