@@ -18,9 +18,9 @@ fi
 
 cp -r $INSTALL_PATH/.claude $1/
 cp -r $INSTALL_PATH/.gemini $1/
+cp -r $INSTALL_PATH/.aiprj $1/
 
 cp $INSTALL_PATH/.mcp.json $1/
-cp $INSTALL_PATH/AI_* $1/
 
 if [ -f $1/.gitignore ]; then
   cat $1/.gitignore > $1/.gitignore.org
