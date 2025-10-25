@@ -5,7 +5,6 @@ mkdir -p ~/.local/bin
 
 cp -r .claude ~/.local/share/aiprj/
 cp -r .gemini ~/.local/share/aiprj/
-cp -r .kiro ~/.local/share/aiprj/
 
 cp .gitignore.org ~/.local/share/aiprj/
 cp .mcp.json ~/.local/share/aiprj/
