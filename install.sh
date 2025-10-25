@@ -3,6 +3,7 @@
 mkdir -p ~/.local/share/aiprj
 mkdir -p ~/.local/bin
 
+cp -r .aiprj  ~/.local/share/aiprj/
 cp -r .claude ~/.local/share/aiprj/
 cp -r .gemini ~/.local/share/aiprj/
 

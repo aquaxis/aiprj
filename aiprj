@@ -23,6 +23,12 @@ cp -r $INSTALL_PATH/.aiprj $1/
 cp $INSTALL_PATH/.mcp.json $1/
 
 if [ -f $1/AI_INSTRUCTIONS.md ]; then
+  echo "------------------------------"
+  echo "Now Instructions"
+  echo "------------------------------"
+  cat $1/AI_INSTRUCTIONS.md
+  echo ""
+  echo "------------------------------"
 else
   cat $INSTALL_PATH/AI_INSTRUCTIONS.md > $1/AI_INSTRUCTIONS.md
 fi
