@@ -13,3 +13,4 @@ descriptions:
 ---
 
 Update an environment to build the content described in .aiprj/instructions.md
+Output the answer in Japanese.

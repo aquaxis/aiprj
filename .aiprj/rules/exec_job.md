@@ -27,3 +27,4 @@ descriptions:
 ---
 
 Execute the instructions listed in .aiprj/instructions.md
+Output the answer in Japanese.
