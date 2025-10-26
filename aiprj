@@ -22,7 +22,7 @@ cp -r $INSTALL_PATH/.aiprj $1/
 
 cp $INSTALL_PATH/.mcp.json $1/
 
-if [ -f $1/AI_INSTRUCTIONS.md ]; then
+if [ -f $1/.aiprj/instructions.md ]; then
   echo "------------------------------"
   echo "Now Instructions"
   echo "------------------------------"
