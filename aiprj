@@ -26,11 +26,11 @@ if [ -f $1/AI_INSTRUCTIONS.md ]; then
   echo "------------------------------"
   echo "Now Instructions"
   echo "------------------------------"
-  cat $1/AI_INSTRUCTIONS.md
+  cat $1/.aiprj/instructions.md
   echo ""
   echo "------------------------------"
 else
-  cat $INSTALL_PATH/AI_INSTRUCTIONS.md > $1/AI_INSTRUCTIONS.md
+  cat $INSTALL_PATH/.aiprj/instructions.md.org > $1/.aiprj/instructions.md
 fi
 
 if [ -f $1/.gitignore ]; then
