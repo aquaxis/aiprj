@@ -1,0 +1,6 @@
+command
+  - setup_aiと単語が入力されたら、./.aiprj/setup_project.mdを読み込み、作成した./AI_PRJ_*.mdの内容を作成する。
+  - aiと単語が入力された、./.aiprj/exec_job.mdを読み込み作業を実行する
+  - next_jobと単語が入力された、次の作業に進む
+  - update_aiと単語が入力された、./.aiprj/update_project.mdを読み込み作業を実行する
+  - exit_aiと単語が入力された、./.aiprj/exit_ai.mdを読み込み作業を実行する
