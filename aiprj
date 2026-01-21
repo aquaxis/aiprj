@@ -29,7 +29,7 @@ if [ -f $1/.aiprj/instructions.md ]; then
   cat $1/.aiprj/instructions.md
   echo ""
   echo "------------------------------"
-  rm $INSTALL_PATH/.aiprj/instructions.md.org
+  rm $1/.aiprj/instructions.md.org
 else
   cat $INSTALL_PATH/.aiprj/instructions.md.org > $1/.aiprj/instructions.md
 fi
