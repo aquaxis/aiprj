@@ -31,7 +31,7 @@ if [ -f $1/.aiprj/instructions.md ]; then
   echo "------------------------------"
   rm $1/.aiprj/instructions.md.org
 else
-  cat $INSTALL_PATH/.aiprj/instructions.md.org > $1/.aiprj/instructions.md
+  cat $1/.aiprj/instructions.md.org > $1/.aiprj/instructions.md
 fi
 
 if [ -f $1/.gitignore ]; then
