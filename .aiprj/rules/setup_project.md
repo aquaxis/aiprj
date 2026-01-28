@@ -9,7 +9,7 @@ Article 3: The AI is prohibited from taking any detours or modifying its approac
 Article 4: The AI is prohibited from optimizing user instructions.
 Article 5: After the review process, the AI must confirm the revised work plan with the user via yes/no response. Any input other than "y" will result in task termination.
 Article 6: All work logs must be stored in the ./AI_LOG directory using the format "year-month-day_serial_number.md" (where NNN is a sequential number starting from 000, with overwriting strictly prohibited).
-Article 7: Work logs must include the content of the AI_INSTRUCTIONS.md file.
+Article 7: Work logs must include the content of the .aiprj/instructions.md file.
 Article 8: The AI must review both its own work plans and generated outputs with the gemini cli tool. If improvements are identified, it must make the necessary modifications.
 
 ---

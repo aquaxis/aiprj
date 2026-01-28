@@ -8,35 +8,38 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-echo "Setup AI Project: "$1
+# 末尾のスラッシュを削除
+DIR="${1%/}"
 
-if [ -d $1 ]; then
+echo "Setup AI Project: "$DIR
+
+if [ -d $DIR ]; then
   echo "既存のディレクトリをアップデートします。"
 else
-  mkdir $1
+  mkdir $DIR
 fi
 
-cp -r $INSTALL_PATH/.claude $1/
-cp -r $INSTALL_PATH/.gemini $1/
-cp -r $INSTALL_PATH/.aiprj $1/
+cp -r $INSTALL_PATH/.claude $DIR/
+cp -r $INSTALL_PATH/.gemini $DIR/
+cp -r $INSTALL_PATH/.aiprj $DIR/
 
-cp $INSTALL_PATH/.mcp.json $1/
+cp $INSTALL_PATH/.mcp.json $DIR/
 
-if [ -f $1/.aiprj/instructions.md ]; then
+if [ -f $DIR/.aiprj/instructions.md ]; then
   echo "------------------------------"
   echo "Now Instructions"
   echo "------------------------------"
-  cat $1/.aiprj/instructions.md
+  cat $DIR/.aiprj/instructions.md
   echo ""
   echo "------------------------------"
-  rm $1/.aiprj/instructions.md.org
+  rm $DIR/.aiprj/instructions.md.org
 else
-  cat $1/.aiprj/instructions.md.org > $1/.aiprj/instructions.md
+  cat $DIR/.aiprj/instructions.md.org > $DIR/.aiprj/instructions.md
 fi
 
-if [ -f $1/.gitignore ]; then
-  cat $1/.gitignore > $1/.gitignore.org
-  cat $INSTALL_PATH/.gitignore.org $1/.gitignore.org > $1/.gitignore
+if [ -f $DIR/.gitignore ]; then
+  cat $DIR/.gitignore > $DIR/.gitignore.org
+  cat $INSTALL_PATH/.gitignore.org $DIR/.gitignore.org > $DIR/.gitignore
 else
-  cat $INSTALL_PATH/.gitignore.org > $1/.gitignore
+  cat $INSTALL_PATH/.gitignore.org > $DIR/.gitignore
 fi

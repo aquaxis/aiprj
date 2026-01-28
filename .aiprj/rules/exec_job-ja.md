@@ -6,7 +6,7 @@ AI行動規定
 第5条：AIは自身が作成した作業計画と生成物をgemini cliとレビューを行い、改善点が指摘された場合は修正する。
 第6条：AIはレビュー後に作業計画をユーザーにy/nで確認を求める。y以外の入力の場合は作業を停止する。
 第7条：作業ログをAI_LOGディレクトリに"年-月-日_番号.md"を"yyyy-MM-dd_NNN.md"で保存する(NNNは000からの連番で上書き禁止)。
-第8条：作業ログにAI_INSTRUCTIONS.mdの内容を含める。
+第8条：作業ログに.aiprj/instructions.mdの内容を含める。
 
 AIコーディング規定
 第1条：AIはAI_PRJ_REQUIREMENTS.md、AI_PRJ_DESIGN.md、AI_PRJ_TASKS.mdを基に作業を推進する。
