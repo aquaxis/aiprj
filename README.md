@@ -34,9 +34,16 @@ aiprj <プロジェクトディレクトリ名>
 
 - `.aiprj/` - AIルールとinstructions.md
 - `.claude/` - Claude Code用の設定とコマンド
+- `.codex/` - Codex用のコマンド
 - `.gemini/` - Gemini CLI用の設定
 - `.mcp.json` - MCPサーバー設定
 - `.gitignore` - Git除外設定
+
+Codexを使用するときは次のように`.codex`ディレクトリをコピーして下さい。
+
+```
+cp -r .codex/* ~/.codex/
+```
 
 ### Claude Codeスラッシュコマンド
 
