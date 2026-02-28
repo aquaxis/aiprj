@@ -12,25 +12,29 @@ aiprjは以下の機能を提供します：
 - Gemini CLIとの連携によるレビュー機能
 - 作業ログの自動保存
 
-## インストール
+## セットアップ
+
+### カレントディレクトリにセットアップ
 
 ```bash
-git clone https://github.com/yourusername/aiprj.git
+curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/main/install.sh | sh
+```
+
+### 指定ディレクトリにセットアップ
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/main/install.sh | sh -s -- <ディレクトリ名>
+```
+
+### 手動セットアップ
+
+```bash
+git clone https://github.com/aquaxis/aiprj.git
 cd aiprj
-./install.sh
+./install.sh <セットアップ先ディレクトリ>
 ```
 
-`~/.local/bin` にパスが通っていることを確認してください。
-
-## 使い方
-
-### 新しいプロジェクトのセットアップ
-
-```bash
-aiprj <プロジェクトディレクトリ名>
-```
-
-このコマンドで以下のファイルが作成されます：
+セットアップにより以下のファイルが作成されます：
 
 - `.aiprj/` - AIルールとinstructions.md
 - `.claude/` - Claude Code用の設定とコマンド
@@ -38,12 +42,6 @@ aiprj <プロジェクトディレクトリ名>
 - `.gemini/` - Gemini CLI用の設定
 - `.mcp.json` - MCPサーバー設定
 - `.gitignore` - Git除外設定
-
-Codexを使用するときは次のように`.codex`ディレクトリをコピーして下さい。
-
-```
-cp -r .codex/* ~/.codex/
-```
 
 ### Claude Codeスラッシュコマンド
 
@@ -83,8 +81,7 @@ AIは以下の規定に従って動作します：
 
 ```
 aiprj/
-├── aiprj              # メインスクリプト
-├── install.sh         # インストールスクリプト
+├── install.sh         # セットアップスクリプト
 ├── .mcp.json          # MCP設定（gemini-cli連携）
 ├── .gitignore.org     # gitignoreテンプレート
 ├── .aiprj/
@@ -97,6 +94,8 @@ aiprj/
 ├── .claude/
 │   ├── settings.json   # Claude Code設定
 │   └── commands/       # スラッシュコマンド定義
+├── .codex/
+│   └── prompts/        # Codexコマンドプロンプト
 └── .gemini/
     ├── rules.yml       # Gemini CLIルール
     └── settings.json   # Gemini CLI設定
@@ -104,7 +103,7 @@ aiprj/
 
 ## 必要環境
 
-- Bash
+- curl（セットアップ用）
 - Claude Code CLI
 - Gemini CLI（レビュー機能用）
 - Node.js / npx（MCP連携用）
