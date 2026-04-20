@@ -11,38 +11,29 @@ aiprj は以下の機能を提供します：
 - Claude Code 用のスラッシュコマンド（`/setup_ai` `/ai` `/update_ai` `/next_ai` `/close_ai`）
 - 作業ログの自動保存（`.aiprj/AI_LOG/yyyy-MM-dd_NNN.md`）
 
-## インストール
+## セットアップ
 
-curl ワンライナー（推奨）:
+### カレントディレクトリにセットアップ
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/main/install.sh | sh
 ```
 
-または clone して実行:
+### 指定ディレクトリにセットアップ
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/main/install.sh | sh -s -- <ディレクトリ名>
+```
+
+### 手動セットアップ
 
 ```bash
 git clone https://github.com/aquaxis/aiprj.git
 cd aiprj
-./install.sh
+./install.sh <セットアップ先ディレクトリ>
 ```
 
-既存インストールがある場合は自動的に削除してからクリーンインストールします。`~/.local/bin` が `PATH` に含まれていることを確認してください。
-
-インストール先:
-
-- `~/.local/bin/aiprj` — 実行スクリプト
-- `~/.local/share/aiprj/` — プロジェクトに展開するテンプレート一式
-
-## 使い方
-
-### プロジェクトへのセットアップ
-
-```bash
-aiprj <プロジェクトディレクトリ名>
-```
-
-指定ディレクトリに以下が配置されます（既存ディレクトリの場合はテンプレートを上書き追加）：
+セットアップにより以下のファイルが作成されます：
 
 - `.aiprj/` — AI ルール、`instructions.md`、`README.md`
 - `.claude/` — Claude Code 用設定とスラッシュコマンド
@@ -86,17 +77,16 @@ AI は以下の規定に従って動作します：
 
 ```
 aiprj/
-├── aiprj                    # メインスクリプト
-├── install.sh               # インストールスクリプト
+├── install.sh               # セットアップスクリプト
 ├── .mcp.json                # MCP 設定
 ├── .gitignore.aiprj         # gitignore テンプレート
 ├── .aiprj/
 │   ├── instructions.md.org  # 指示書テンプレート
 │   └── rules/
-│       ├── setup_project.md # セットアップルール
-│       ├── exec_job.md      # タスク実行ルール
+│       ├── setup_project.md  # セットアップルール
+│       ├── exec_job.md       # タスク実行ルール
 │       ├── update_project.md # 更新ルール
-│       └── close_ai.md      # 終了ルール
+│       └── close_ai.md       # 終了ルール
 └── .claude/
     ├── settings.json        # Claude Code 設定
     └── commands/            # スラッシュコマンド定義
@@ -109,9 +99,9 @@ aiprj/
 
 ## 必要環境
 
-- Bash
+- `curl`（セットアップ用）
+- `tar`（ワンライナー fallback 時）、または `git`
 - Claude Code CLI
-- `curl` / `tar`（ワンライナーインストール時）
 - Node.js / `npx`（MCP 連携時）
 
 ## ライセンス

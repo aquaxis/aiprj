@@ -1,54 +1,96 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -e
 
-REPO="aquaxis/aiprj"
+REPO_URL="https://github.com/aquaxis/aiprj.git"
 BRANCH="${AIPRJ_BRANCH:-main}"
-INSTALL_SHARE="${HOME}/.local/share/aiprj"
-INSTALL_BIN="${HOME}/.local/bin"
+ARCHIVE_URL="https://github.com/aquaxis/aiprj/archive/${BRANCH}.tar.gz"
 
-# Locate source: prefer current directory when it looks like the repo,
-# otherwise download a tarball from GitHub (curl one-liner mode).
-if [ -f "./aiprj" ] && [ -d "./.aiprj" ] && [ -d "./.claude" ]; then
-  SRC_DIR="$(pwd)"
-  CLEANUP=""
+check_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "エラー: $1 が見つかりません。インストールしてください。" >&2
+    exit 1
+  fi
+}
+
+check_command curl
+
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+download_archive() {
+  echo "curl + tar でダウンロードします..."
+  check_command tar
+  mkdir -p "$TMPDIR/aiprj"
+  curl -fsSL "$ARCHIVE_URL" | tar xz --strip-components=1 -C "$TMPDIR/aiprj" || {
+    echo "エラー: リポジトリのダウンロードに失敗しました。ネットワーク接続を確認してください。" >&2
+    exit 1
+  }
+}
+
+DIR="${1:-.}"
+DIR="${DIR%/}"
+
+echo "aiprj: プロジェクトをセットアップしています..."
+
+# ローカル実行（リポジトリ直下）ならダウンロードをスキップ
+if [ -f "./install.sh" ] && [ -d "./.aiprj" ] && [ -d "./.claude" ] && [ -f "./README.md" ] && [ "$DIR" != "." ]; then
+  SRC="$(pwd)"
 else
-  command -v curl >/dev/null 2>&1 || { echo "curl is required" >&2; exit 1; }
-  command -v tar  >/dev/null 2>&1 || { echo "tar is required"  >&2; exit 1; }
-  TMP="$(mktemp -d)"
-  CLEANUP="$TMP"
-  trap 'rm -rf "$CLEANUP"' EXIT
-  echo "Downloading ${REPO}@${BRANCH} ..."
-  curl -fsSL "https://github.com/${REPO}/archive/refs/heads/${BRANCH}.tar.gz" \
-    | tar xz -C "$TMP"
-  SRC_DIR="${TMP}/aiprj-${BRANCH}"
+  if command -v git >/dev/null 2>&1; then
+    echo "git clone でリポジトリを取得しています..."
+    git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TMPDIR/aiprj" 2>/dev/null || {
+      echo "git clone に失敗しました。"
+      rm -rf "$TMPDIR/aiprj"
+      download_archive
+    }
+  else
+    echo "git が見つかりません。"
+    download_archive
+  fi
+  SRC="$TMPDIR/aiprj"
 fi
 
-# Clean existing install before reinstalling.
-if [ -e "$INSTALL_SHARE" ]; then
-  echo "Removing existing $INSTALL_SHARE"
-  rm -rf "$INSTALL_SHARE"
-fi
-if [ -e "${INSTALL_BIN}/aiprj" ]; then
-  echo "Removing existing ${INSTALL_BIN}/aiprj"
-  rm -f "${INSTALL_BIN}/aiprj"
+if [ "$DIR" != "." ]; then
+  if [ -d "$DIR" ]; then
+    echo "既存のディレクトリをアップデートします。"
+  else
+    mkdir -p "$DIR"
+  fi
 fi
 
-mkdir -p "$INSTALL_SHARE"
-mkdir -p "$INSTALL_BIN"
+# テンプレートファイルのコピー
+for d in .aiprj .claude; do
+  if [ -d "$SRC/$d" ]; then
+    cp -r "$SRC/$d" "$DIR/"
+  fi
+done
 
-cp -r "${SRC_DIR}/.aiprj"  "${INSTALL_SHARE}/"
-cp -r "${SRC_DIR}/.claude" "${INSTALL_SHARE}/"
+cp "$SRC/.mcp.json" "$DIR/"
+cp "$SRC/README.md" "$DIR/.aiprj/"
 
-cp "${SRC_DIR}/.gitignore.aiprj" "${INSTALL_SHARE}/"
-cp "${SRC_DIR}/.mcp.json"        "${INSTALL_SHARE}/"
+# instructions.md の管理
+if [ -f "$DIR/.aiprj/instructions.md" ]; then
+  echo "------------------------------"
+  echo "現在のインストラクション"
+  echo "------------------------------"
+  cat "$DIR/.aiprj/instructions.md"
+  echo ""
+  echo "------------------------------"
+  [ -f "$DIR/.aiprj/instructions.md.org" ] && rm "$DIR/.aiprj/instructions.md.org"
+elif [ -f "$DIR/.aiprj/instructions.md.org" ]; then
+  mv "$DIR/.aiprj/instructions.md.org" "$DIR/.aiprj/instructions.md"
+fi
 
-cp "${SRC_DIR}/README.md" "${INSTALL_SHARE}/.aiprj/"
+# .gitignore の管理（重複防止）
+if [ -f "$DIR/.gitignore" ]; then
+  if ! grep -qxF ".aiprj" "$DIR/.gitignore"; then
+    TMP_GI="$(mktemp)"
+    cat "$SRC/.gitignore.aiprj" "$DIR/.gitignore" > "$TMP_GI"
+    mv "$TMP_GI" "$DIR/.gitignore"
+  fi
+else
+  cp "$SRC/.gitignore.aiprj" "$DIR/.gitignore"
+fi
 
-install -m 755 "${SRC_DIR}/aiprj" "${INSTALL_BIN}/aiprj"
-
-echo "Installed: ${INSTALL_BIN}/aiprj"
-echo "Assets:    ${INSTALL_SHARE}"
-case ":${PATH}:" in
-  *":${INSTALL_BIN}:"*) ;;
-  *) echo "Note: ${INSTALL_BIN} is not on PATH. Add it to your shell rc." ;;
-esac
+echo ""
+echo "aiprj のセットアップが完了しました: $DIR"
