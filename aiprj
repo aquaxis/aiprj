@@ -1,45 +1,46 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -eu
 
-INSTALL_PATH=~/.local/share/aiprj
+INSTALL_PATH="${HOME}/.local/share/aiprj"
 
-if [ -z "$1" ]; then
+if [ -z "${1:-}" ]; then
   echo "引数がありません。"
-  echo "[Usage] "$0" 作成するディレクトリ名"
+  echo "[Usage] $0 作成するディレクトリ名"
   exit 1
 fi
 
 # 末尾のスラッシュを削除
 DIR="${1%/}"
 
-echo "Setup AI Project: "$DIR
+echo "Setup AI Project: ${DIR}"
 
-if [ -d $DIR ]; then
+if [ -d "${DIR}" ]; then
   echo "既存のディレクトリをアップデートします。"
 else
-  mkdir $DIR
+  mkdir "${DIR}"
 fi
 
-cp -r $INSTALL_PATH/.claude $DIR/
-cp -r $INSTALL_PATH/.gemini $DIR/
-cp -r $INSTALL_PATH/.aiprj $DIR/
+cp -r "${INSTALL_PATH}/.claude" "${DIR}/"
+cp -r "${INSTALL_PATH}/.aiprj" "${DIR}/"
 
-cp $INSTALL_PATH/.mcp.json $DIR/
+cp "${INSTALL_PATH}/.mcp.json" "${DIR}/"
 
-if [ -f $DIR/.aiprj/instructions.md ]; then
+if [ -f "${DIR}/.aiprj/instructions.md" ]; then
   echo "------------------------------"
   echo "Now Instructions"
   echo "------------------------------"
-  cat $DIR/.aiprj/instructions.md
+  cat "${DIR}/.aiprj/instructions.md"
   echo ""
   echo "------------------------------"
-  rm $DIR/.aiprj/instructions.md.org
+  rm -f "${DIR}/.aiprj/instructions.md.org"
 else
-  cat $DIR/.aiprj/instructions.md.org > $DIR/.aiprj/instructions.md
+  mv "${DIR}/.aiprj/instructions.md.org" "${DIR}/.aiprj/instructions.md"
 fi
 
-if [ -f $DIR/.gitignore ]; then
-  cat $DIR/.gitignore > $DIR/.gitignore.org
-  cat $INSTALL_PATH/.gitignore.org $DIR/.gitignore.org > $DIR/.gitignore
+if [ -f "${DIR}/.gitignore" ]; then
+  TMP_GITIGNORE="$(mktemp)"
+  cat "${INSTALL_PATH}/.gitignore.aiprj" "${DIR}/.gitignore" > "${TMP_GITIGNORE}"
+  mv "${TMP_GITIGNORE}" "${DIR}/.gitignore"
 else
-  cat $INSTALL_PATH/.gitignore.org > $DIR/.gitignore
+  cp "${INSTALL_PATH}/.gitignore.aiprj" "${DIR}/.gitignore"
 fi
