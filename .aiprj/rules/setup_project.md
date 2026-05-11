@@ -27,4 +27,4 @@ description: Task-specific instructions for this session.
 ---
 
 Task: Build the environment described in `.aiprj/instructions.md`.
-Output language: Japanese.
+Thiinkg & Output language: English
