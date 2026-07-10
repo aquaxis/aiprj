@@ -59,6 +59,7 @@ uninstall_aiprj() {
   [ -d "$DIR/.aiprj" ] && HAS_AIPRJ=1
   for cmd in setup_ai ai update_ai next_ai close_ai; do
     [ -f "$DIR/.claude/commands/$cmd.md" ] && HAS_AIPRJ=1
+    [ -f "$DIR/.agent-cli/commands/$cmd.md" ] && HAS_AIPRJ=1
   done
 
   if [ "$HAS_AIPRJ" -eq 0 ]; then
@@ -71,6 +72,7 @@ uninstall_aiprj() {
     [ -d "$DIR/.aiprj" ] && echo "  - $DIR/.aiprj/ (rules, instructions, work logs, project docs)"
     for cmd in setup_ai ai update_ai next_ai close_ai; do
       [ -f "$DIR/.claude/commands/$cmd.md" ] && echo "  - $DIR/.claude/commands/$cmd.md"
+      [ -f "$DIR/.agent-cli/commands/$cmd.md" ] && echo "  - $DIR/.agent-cli/commands/$cmd.md"
     done
     [ -f "$DIR/.gitignore" ] && echo "  - aiprj entries in $DIR/.gitignore"
     echo "The following will be preserved (may contain user customizations):"
@@ -95,10 +97,18 @@ uninstall_aiprj() {
       rm -f "$DIR/.claude/commands/$cmd.md"
       echo "Removed: $DIR/.claude/commands/$cmd.md"
     fi
+    if [ -f "$DIR/.agent-cli/commands/$cmd.md" ]; then
+      rm -f "$DIR/.agent-cli/commands/$cmd.md"
+      echo "Removed: $DIR/.agent-cli/commands/$cmd.md"
+    fi
   done
 
   if [ -d "$DIR/.claude/commands" ] && [ -z "$(ls -A "$DIR/.claude/commands")" ]; then
     rmdir "$DIR/.claude/commands"
+  fi
+
+  if [ -d "$DIR/.agent-cli/commands" ] && [ -z "$(ls -A "$DIR/.agent-cli/commands")" ]; then
+    rmdir "$DIR/.agent-cli/commands"
   fi
 
   if [ -f "$DIR/.gitignore" ]; then
@@ -166,7 +176,7 @@ if [ "$DIR" != "." ]; then
 fi
 
 # Copy template files
-for d in .aiprj .claude; do
+for d in .aiprj .claude .agent-cli; do
   if [ -d "$SRC/$d" ]; then
     cp -r "$SRC/$d" "$DIR/"
   fi
