@@ -149,9 +149,16 @@ download_archive() {
 
 echo "aiprj: Setting up project..."
 
-# Skip download if running locally (in repository root)
-if [ -f "./install.sh" ] && [ -d "./.aiprj" ] && [ -d "./.claude" ] && [ -f "./README.md" ] && [ "$DIR" != "." ]; then
-  SRC="$(pwd)"
+# Determine the directory containing this script (for local execution)
+case "$0" in
+  */*) SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd) ;;
+  *) SCRIPT_DIR=$(pwd) ;;
+esac
+
+# Use the local checkout if this script is run from one; otherwise fetch the repo
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/install.sh" ] && [ -d "$SCRIPT_DIR/.aiprj" ] && [ -d "$SCRIPT_DIR/.claude" ] && [ -f "$SCRIPT_DIR/README.md" ]; then
+  echo "Using local repository at $SCRIPT_DIR"
+  SRC="$SCRIPT_DIR"
 else
   if command -v git >/dev/null 2>&1; then
     echo "Fetching repository via git clone..."
@@ -167,12 +174,20 @@ else
   SRC="$TMPDIR/aiprj"
 fi
 
-if [ "$DIR" != "." ]; then
-  if [ -d "$DIR" ]; then
-    echo "Updating existing directory."
-  else
-    mkdir -p "$DIR"
-  fi
+# Create target directory if needed
+if [ -d "$DIR" ]; then
+  [ "$DIR" != "." ] && echo "Updating existing directory."
+else
+  mkdir -p "$DIR"
+fi
+
+# Guard against copying the repository onto itself
+SRC_ABS=$(CDPATH= cd -- "$SRC" 2>/dev/null && pwd)
+DIR_ABS=$(CDPATH= cd -- "$DIR" 2>/dev/null && pwd)
+if [ -n "$SRC_ABS" ] && [ "$SRC_ABS" = "$DIR_ABS" ]; then
+  echo "Error: Source and target are the same directory ($SRC_ABS)." >&2
+  echo "Run the installer from the aiprj checkout and specify a different target directory." >&2
+  exit 1
 fi
 
 # Copy template files
