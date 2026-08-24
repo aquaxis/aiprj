@@ -182,7 +182,6 @@ for d in .aiprj .claude .agent-cli; do
   fi
 done
 
-cp "$SRC/.mcp.json" "$DIR/"
 cp "$SRC/README.md" "$DIR/.aiprj/"
 
 # Manage instructions.md
