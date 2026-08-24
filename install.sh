@@ -140,11 +140,18 @@ trap 'rm -rf "$TMPDIR"' EXIT
 download_archive() {
   echo "Downloading via curl + tar..."
   check_command tar
+  rm -rf "$TMPDIR/aiprj"
   mkdir -p "$TMPDIR/aiprj"
-  curl -fsSL "$ARCHIVE_URL" | tar xz --strip-components=1 -C "$TMPDIR/aiprj" || {
+  # Download to a file (do NOT pipe): a pipe would consume the script's stdin
+  # when this installer itself is run via `curl ... | sh`.
+  if ! curl -fsSL "$ARCHIVE_URL" -o "$TMPDIR/aiprj.tar.gz"; then
     echo "Error: Failed to download repository. Please check your network connection." >&2
     exit 1
-  }
+  fi
+  if ! tar xzf "$TMPDIR/aiprj.tar.gz" --strip-components=1 -C "$TMPDIR/aiprj"; then
+    echo "Error: Failed to extract repository archive." >&2
+    exit 1
+  fi
 }
 
 echo "aiprj: Setting up project..."
@@ -160,16 +167,20 @@ if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/install.sh" ] && [ -d "$SCRIPT_DIR/
   echo "Using local repository at $SCRIPT_DIR"
   SRC="$SCRIPT_DIR"
 else
-  if command -v git >/dev/null 2>&1; then
+  # Prefer the tarball: it works for any public repo, needs no auth, and does
+  # not read stdin -- important when this installer is run via `curl ... | sh`,
+  # where an auth-prompting `git clone` would swallow the rest of the script.
+  if command -v tar >/dev/null 2>&1; then
+    download_archive
+  elif command -v git >/dev/null 2>&1; then
     echo "Fetching repository via git clone..."
-    git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TMPDIR/aiprj" 2>/dev/null || {
-      echo "git clone failed."
-      rm -rf "$TMPDIR/aiprj"
-      download_archive
+    GIT_TERMINAL_PROMPT=0 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TMPDIR/aiprj" </dev/null 2>/dev/null || {
+      echo "Error: Failed to clone repository. Please check your network connection." >&2
+      exit 1
     }
   else
-    echo "git not found."
-    download_archive
+    echo "Error: need either tar or git to fetch the repository." >&2
+    exit 1
   fi
   SRC="$TMPDIR/aiprj"
 fi
