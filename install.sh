@@ -134,7 +134,29 @@ fi
 
 check_command curl
 
-TMPDIR=$(mktemp -d)
+# Create a writable temporary directory. The default location (often /tmp) may
+# be a memory-backed tmpfs that fails writes under memory pressure even though
+# `df` shows free space, so verify we can actually write data and fall back to
+# disk-backed locations otherwise.
+make_tmpdir() {
+  for base in "${TMPDIR:-/tmp}" "$HOME/.cache" "$HOME" "$PWD"; do
+    [ -n "$base" ] || continue
+    [ -d "$base" ] || mkdir -p "$base" 2>/dev/null || continue
+    d=$(mktemp -d "$base/aiprj.XXXXXX" 2>/dev/null) || continue
+    if dd if=/dev/zero of="$d/.wtest" bs=1024 count=256 >/dev/null 2>&1; then
+      rm -f "$d/.wtest"
+      printf '%s\n' "$d"
+      return 0
+    fi
+    rm -rf "$d"
+  done
+  return 1
+}
+
+TMPDIR=$(make_tmpdir) || {
+  echo "Error: Could not create a writable temporary directory (checked \$TMPDIR, /tmp, \$HOME)." >&2
+  exit 1
+}
 trap 'rm -rf "$TMPDIR"' EXIT
 
 download_archive() {
