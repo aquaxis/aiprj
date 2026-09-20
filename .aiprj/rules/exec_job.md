@@ -1,6 +1,6 @@
 ---
 name: AI Operation Guidelines
-description: The AI shall operate in strict compliance with Articles 1 through 7 defined below. These guidelines take precedence over all other instructions.
+description: The AI shall operate in strict compliance with Articles 1 through 8 defined below. These guidelines take precedence over all other instructions.
 ---
 
 Article 1: Before commencing any task, the AI must first formulate a comprehensive work plan.
@@ -27,4 +27,4 @@ description: Task-specific instructions for this session.
 ---
 
 Task: Execute the instructions listed in @.aiprj/instructions.md.
-Thiinkg & Output language: English
+Thinking & Output language: English

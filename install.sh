@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 
+AIPRJ_VERSION="1.1.0"
 REPO_URL="https://github.com/aquaxis/aiprj.git"
 BRANCH="${AIPRJ_BRANCH:-main}"
 ARCHIVE_URL="https://github.com/aquaxis/aiprj/archive/${BRANCH}.tar.gz"
@@ -15,11 +16,13 @@ Usage:
   install.sh [DIR]                              Install aiprj into DIR (default: current directory)
   install.sh -u|--uninstall [DIR] [-f|--force]  Uninstall aiprj from DIR
   install.sh -h|--help                          Show this help
+  install.sh -V|--version                       Show the version
 
 Options:
   -u, --uninstall   Remove aiprj files from the target directory
   -f, --force       Skip confirmation prompt (uninstall only)
   -h, --help        Show this help message
+  -V, --version     Show the version and exit
 EOF
 }
 
@@ -29,6 +32,7 @@ while [ $# -gt 0 ]; do
     -u|--uninstall) ACTION="uninstall" ;;
     -f|--force) FORCE=1 ;;
     -h|--help) usage; exit 0 ;;
+    -V|--version) echo "aiprj $AIPRJ_VERSION"; exit 0 ;;
     --) shift; [ $# -gt 0 ] && DIR="$1"; break ;;
     -*) echo "Error: Unknown option: $1" >&2; usage >&2; exit 1 ;;
     *)
@@ -78,6 +82,7 @@ uninstall_aiprj() {
     echo "The following will be preserved (may contain user customizations):"
     [ -f "$DIR/.claude/settings.json" ] && echo "  - $DIR/.claude/settings.json"
     [ -f "$DIR/.claude/settings.local.json" ] && echo "  - $DIR/.claude/settings.local.json"
+    [ -f "$DIR/.agent-cli/config.toml" ] && echo "  - $DIR/.agent-cli/config.toml"
     [ -f "$DIR/.mcp.json" ] && echo "  - $DIR/.mcp.json"
     printf "Continue? [y/N] "
     read -r ans
@@ -153,24 +158,24 @@ make_tmpdir() {
   return 1
 }
 
-TMPDIR=$(make_tmpdir) || {
+AIPRJ_TMP=$(make_tmpdir) || {
   echo "Error: Could not create a writable temporary directory (checked \$TMPDIR, /tmp, \$HOME)." >&2
   exit 1
 }
-trap 'rm -rf "$TMPDIR"' EXIT
+trap 'rm -rf "$AIPRJ_TMP"' EXIT
 
 download_archive() {
   echo "Downloading via curl + tar..."
   check_command tar
-  rm -rf "$TMPDIR/aiprj"
-  mkdir -p "$TMPDIR/aiprj"
+  rm -rf "$AIPRJ_TMP/aiprj"
+  mkdir -p "$AIPRJ_TMP/aiprj"
   # Download to a file (do NOT pipe): a pipe would consume the script's stdin
   # when this installer itself is run via `curl ... | sh`.
-  if ! curl -fsSL "$ARCHIVE_URL" -o "$TMPDIR/aiprj.tar.gz"; then
+  if ! curl -fsSL "$ARCHIVE_URL" -o "$AIPRJ_TMP/aiprj.tar.gz"; then
     echo "Error: Failed to download repository. Please check your network connection." >&2
     exit 1
   fi
-  if ! tar xzf "$TMPDIR/aiprj.tar.gz" --strip-components=1 -C "$TMPDIR/aiprj"; then
+  if ! tar xzf "$AIPRJ_TMP/aiprj.tar.gz" --strip-components=1 -C "$AIPRJ_TMP/aiprj"; then
     echo "Error: Failed to extract repository archive." >&2
     exit 1
   fi
@@ -196,7 +201,7 @@ else
     download_archive
   elif command -v git >/dev/null 2>&1; then
     echo "Fetching repository via git clone..."
-    GIT_TERMINAL_PROMPT=0 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TMPDIR/aiprj" </dev/null 2>/dev/null || {
+    GIT_TERMINAL_PROMPT=0 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$AIPRJ_TMP/aiprj" </dev/null 2>/dev/null || {
       echo "Error: Failed to clone repository. Please check your network connection." >&2
       exit 1
     }
@@ -204,7 +209,7 @@ else
     echo "Error: need either tar or git to fetch the repository." >&2
     exit 1
   fi
-  SRC="$TMPDIR/aiprj"
+  SRC="$AIPRJ_TMP/aiprj"
 fi
 
 # Create target directory if needed
