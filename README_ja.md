@@ -48,6 +48,7 @@ AIPRJ_BRANCH=develop curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/
 | `-u`, `--uninstall` | 対象ディレクトリからaiprjのファイルを削除 |
 | `-f`, `--force` | 確認プロンプトを省略（アンインストール時のみ） |
 | `-h`, `--help` | ヘルプを表示 |
+| `-V`, `--version` | バージョンを表示して終了 |
 
 セットアップにより以下のファイルが作成されます：
 
@@ -73,7 +74,7 @@ AIPRJ_BRANCH=develop curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/
 | | 対象 |
 |---|---|
 | **削除される** | `.aiprj/`（ルール、instructions、作業ログ、プロジェクトドキュメント）、`.claude/commands/`と`.agent-cli/commands/`配下のaiprjスラッシュコマンド5点、`.gitignore`内のaiprj関連エントリ |
-| **保持される** | `.claude/settings.json`、`.claude/settings.local.json`、`.mcp.json` - ユーザーのカスタマイズを含む可能性があるため |
+| **保持される** | `.claude/settings.json`、`.claude/settings.local.json`、`.agent-cli/config.toml`、`.mcp.json` - ユーザーのカスタマイズを含む可能性があるため |
 
 aiprjのエントリを削除した結果`.gitignore`が空になった場合、ファイル自体が削除されます。
 
@@ -316,7 +317,8 @@ AIは以下のガイドラインに従って動作します：
 
 ## 権限・エージェント設定
 
-コマンドと併せて`.claude/settings.json`（および同等の`.agent-cli/settings.json`）が同梱されます。
+コマンドと併せて`.claude/settings.json`、および[agent-cli](https://github.com/aquaxis/agent-cli)向けの
+同等設定である`.agent-cli/config.toml`が同梱されます。
 
 **禁止（deny）**: `rm -rf ~/**`と`rm -rf //**`、`git remote add` / `git remote set-url`（リモートの
 差し替え防止）、`npm publish` / `pnpm publish`（誤公開の防止）、`tmp/**`・`node_modules/`・`*.log`・
@@ -329,7 +331,14 @@ AIは以下のガイドラインに従って動作します：
 環境変数として`BASH_DEFAULT_TIMEOUT_MS=300000`、`BASH_MAX_TIMEOUT_MS=1200000`、
 `DISABLE_AUTOUPDATER=0`が設定されます。
 
-`.agent-cli/settings.json`は上記と同一で、`MultiEdit(**)`と`Write(**)`の許可のみが追加されています。
+**agent-cli（`.agent-cli/config.toml`）**: 上記と同じdeny / allowをagent-cliのパーミッションルール
+として記述したものです（ルール名は大文字小文字と`_`を無視して照合されるため、Claude Codeの
+`Bash(git:*)`形式がそのまま通用します）。allowには`write`が追加されています。このファイルは
+*プロジェクトローカルのオーバーレイ*で、agent-cliはまず`~/.config/agent-cli/config.toml`を読み、
+その上にキー単位でマージします。したがってプロバイダ・UI・履歴などの個人設定は保持されます。
+併せて5つのスラッシュコマンドを認識させる`[runtime] commands_dir = ".agent-cli/commands"`と、
+Claude Code側のタイムアウトに合わせた`[tools.bash] timeout_ms = 300000`を設定します。
+実際に読み込まれた階層は`agent-cli config path`で確認できます。
 
 ## ファイル構成
 
@@ -353,7 +362,7 @@ aiprj/
 │       ├── next_ai.md
 │       └── close_ai.md
 └── .agent-cli/              # Claude Code互換エージェントCLI用
-    ├── settings.json        # .claude/settings.json＋Write/MultiEdit
+    ├── config.toml          # agent-cli設定（.claude/settings.jsonと同等のルール）
     └── commands/            # .claude/commands/と同一内容
 ```
 

@@ -48,6 +48,7 @@ AIPRJ_BRANCH=develop curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/
 | `-u`, `--uninstall` | Remove aiprj files from the target directory |
 | `-f`, `--force` | Skip the confirmation prompt (uninstall only) |
 | `-h`, `--help` | Show the help message |
+| `-V`, `--version` | Show the version and exit |
 
 The following files are created by setup:
 
@@ -73,7 +74,7 @@ only renamed to `instructions.md` when no `instructions.md` exists yet.
 | | Items |
 |---|---|
 | **Removed** | `.aiprj/` (rules, instructions, work logs, project documents), the five aiprj slash commands under `.claude/commands/` and `.agent-cli/commands/`, and aiprj entries in `.gitignore` |
-| **Preserved** | `.claude/settings.json`, `.claude/settings.local.json`, `.mcp.json` - these may contain your own customizations |
+| **Preserved** | `.claude/settings.json`, `.claude/settings.local.json`, `.agent-cli/config.toml`, `.mcp.json` - these may contain your own customizations |
 
 If `.gitignore` becomes empty after the aiprj entries are removed, the file itself is deleted.
 
@@ -315,7 +316,8 @@ The `NNN` suffix of a work log is a zero-padded sequential number starting at `0
 
 ## Permissions & Agent Settings
 
-A `.claude/settings.json` (mirrored as `.agent-cli/settings.json`) is installed alongside the commands.
+A `.claude/settings.json` is installed alongside the commands, with an equivalent
+`.agent-cli/config.toml` for [agent-cli](https://github.com/aquaxis/agent-cli).
 
 **Denied**: `rm -rf ~/**` and `rm -rf //**`, `git remote add` / `git remote set-url` (so the remote
 cannot be swapped), `npm publish` / `pnpm publish` (so nothing is published by accident), and reads
@@ -329,8 +331,14 @@ of `tmp/**`, `node_modules/`, `*.log`, and `.env*` (secrets and noise).
 usage, and the environment sets `BASH_DEFAULT_TIMEOUT_MS=300000`, `BASH_MAX_TIMEOUT_MS=1200000`,
 and `DISABLE_AUTOUPDATER=0`.
 
-`.agent-cli/settings.json` is identical except that it additionally allows `MultiEdit(**)` and
-`Write(**)`.
+**agent-cli (`.agent-cli/config.toml`)**: the same deny / allow lists expressed as agent-cli
+permission rules (rule names are matched case-insensitively and ignoring `_`, so Claude Code's
+`Bash(git:*)` form carries over unedited), plus `write` in the allow list. It is a *project-local
+overlay*: agent-cli reads `~/.config/agent-cli/config.toml` first and merges this file over it key
+by key, so your provider, UI and history settings are untouched. It also sets
+`[runtime] commands_dir = ".agent-cli/commands"` so the five slash commands are found, and
+`[tools.bash] timeout_ms = 300000` to match the Claude Code timeout. Confirm the resolved layers
+with `agent-cli config path`.
 
 ## File Structure
 
@@ -354,7 +362,7 @@ aiprj/
 │       ├── next_ai.md
 │       └── close_ai.md
 └── .agent-cli/              # For Claude Code compatible agent CLIs
-    ├── settings.json        # Same as .claude/settings.json, plus Write/MultiEdit
+    ├── config.toml          # agent-cli settings (same rules as .claude/settings.json)
     └── commands/            # Identical to .claude/commands/
 ```
 

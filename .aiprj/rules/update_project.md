@@ -1,6 +1,6 @@
 ---
 name: AI Update Guidelines
-description: The AI shall carry out update work in strict compliance with Articles 1 through 3 defined below.
+description: The AI shall carry out update work in strict compliance with Articles 1 through 4 defined below.
 ---
 
 Article 1: The AI must reload @.aiprj/instructions.md and update @.aiprj/AI_PRJ_REQUIREMENTS.md, @.aiprj/AI_PRJ_DESIGN.md, and @.aiprj/AI_PRJ_TASKS.md to reflect its current contents. If any of these three files does not exist, the AI must create it.
@@ -14,4 +14,4 @@ description: Task-specific instructions for this update session.
 ---
 
 Task: Reload @.aiprj/instructions.md and update @.aiprj/AI_PRJ_REQUIREMENTS.md, @.aiprj/AI_PRJ_DESIGN.md, and @.aiprj/AI_PRJ_TASKS.md to match its current contents.
-Thiinkg & Output language: English
+Thinking & Output language: English
