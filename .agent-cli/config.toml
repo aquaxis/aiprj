@@ -49,18 +49,7 @@ deny = [
   "read(**/node_modules/**)",
 ]
 allow = [
-  "bash(git:*)",
-  "bash(gh:*)",
-  "bash(node:*)",
-  "bash(pnpm:*)",
-  "bash(touch:*)",
-  "bash(mkdir:*)",
-  "bash(cp:*)",
-  "bash(mv:*)",
-  "bash(rm:*)",
-  "bash(find:*)",
-  "bash(grep:*)",
-  "bash(rg:*)",
+  "bash",
   "read",                      # every call; the deny rules above still win
   "edit",
   "write",
