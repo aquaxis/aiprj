@@ -26,10 +26,6 @@ enabled = [
   "webfetch",
 ]
 
-[tools.bash]
-timeout_ms    = 300000   # aiprj tasks run builds and test suites
-max_output_kb = 256
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Permissions. A guardrail against mistakes, not a sandbox: only the leading
 # words of a command are inspected, so a deny does not stop `sh -c ...`.
