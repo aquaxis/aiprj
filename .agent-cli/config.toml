@@ -2,10 +2,26 @@
 #
 # This file is the project-local overlay (`./.agent-cli/config.toml`). It is
 # merged over `~/.config/agent-cli/config.toml` key by key, so only what aiprj
-# actually needs is set here -- your provider, UI and history settings are kept.
+# actually needs is set here — your provider, UI and history settings are kept.
 #
 # Confirm the resolved chain with: agent-cli config path
+#
+# Structure follows example/config.example.toml of agent-cli v0.26.0; sections
+# aiprj does not change are present as their sample comments so the surface
+# stays discoverable without setting anything extra.
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Runtime behavior and paths. aiprj sets exactly two keys — everything below
+# them (log_dir / registry_dir / agents_dir / persona_file / max_tool_iterations
+# / group) is inherited from the user-level config or the defaults:
+#   [runtime]
+#   log_dir             = "~/.local/share/agent-cli/logs"
+#   registry_dir        = ""            # => per-user default (/run/user/<uid>/agent-cli)
+#   agents_dir          = "~/.config/agent-cli/agents"
+#   persona_file        = ""            # => built-in default persona
+#   max_tool_iterations = 24
+#   # group = ""                        # default group id for spawned agents
+# ─────────────────────────────────────────────────────────────────────��───────
 [runtime]
 # Where the aiprj slash commands (/setup_ai /ai /update_ai /next_ai /close_ai)
 # are read from. Relative to the current working directory.
@@ -14,6 +30,14 @@ commands_dir       = ".agent-cli/commands"
 # narrows that down, not a blanket auto-approve.
 auto_approve_tools = false
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Tools: which built-in tools the agent can call, and per-tool tuning
+# (bash/read/write/send_to/list_agents/stop_agent/monitor/edit/glob/grep/
+# websearch/webfetch plus the opt-in "spawn"). Per-tool blocks —
+#   [tools.bash]      timeout_ms = 120000 / max_output_kb = 256
+#   [tools.websearch] api_key_env / endpoint / provider ("tavily")
+# — are inherited from the user-level config; nothing aiprj tunes here.
+# ─────────────────────────────────────────────────────────────────────────────
 [tools]
 enabled = [
   "bash",
@@ -59,3 +83,111 @@ allow = [
   "webfetch(domain:*)",
 ]
 default_mode = "ask"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Provider: the AI backend (claude | claude-code | codex | ollama | opencode |
+# opencode-go | llama.cpp). The user-level config decides it; aiprj does not
+# override. The current sample (v0.26.0), all commented:
+# ─────────────────────────────────────────────────────────────────────────────
+# [provider]
+# kind = "claude"
+#
+# [provider.claude]
+# model       = "claude-opus-4-7"
+# api_key_env = "ANTHROPIC_API_KEY"
+# base_url    = "https://api.anthropic.com"
+# thinking    = true
+# # prompt_cache = true        # opt-in: system + tools + conversation tail
+#
+# [provider.claude-code]
+# bin       = "claude"
+# model     = "sonnet"
+# mode      = "delegation"      # or "gateway" (--tools "", chat only)
+# transport = "stream"          # or "oneshot"
+# session   = "persistent"      # or "ephemeral" (delegation only)
+# turn_timeout_secs  = 900
+# tools              = ["Bash", "Read"]
+# allowed_tools      = ["Bash(git *)"]
+# disallowed_tools   = ["WebFetch"]
+# permission_mode    = "auto"
+# max_budget_usd     = 1.0
+# system_prompt_mode = "append"       # or "replace"
+# extra_args         = []             # passed through verbatim
+#
+# [provider.codex]
+# model       = "gpt-4.1"
+# api_key_env = "OPENAI_API_KEY"
+# base_url    = "https://api.openai.com/v1"
+#
+# [provider.ollama]
+# model    = "glm-5.1:cloud"
+# base_url = "http://127.0.0.1:11434"
+#
+# [provider.opencode]
+# # Local:  base_url = "http://127.0.0.1:4096" / model = "claude-sonnet-4-5"
+# # Cloud:  a resolved api_key_env selects the cloud mode; Go serves
+# #         open-weight models only (GET {base_url}/models lists them).
+# base_url    = "https://opencode.ai/zen/go/v1"
+# api_key_env = "OPENCODE_API_KEY"
+# model       = "qwen3.8-max"
+# api         = "openai"              # or "anthropic" (/messages)
+# session_id  = "ses_my_stable_id"    # cloud only; generated per process if unset
+# persistent_session = true           # opt-in, local mode only
+#
+# [provider."llama.cpp"]
+# model    = "default"
+# base_url = "http://127.0.0.1:8080"
+# # max_tokens / temperature / top_k / top_p / min_p /
+# # repeat_penalty / repeat_last_n / seed
+
+# ─────────────────────────────────────────────────────────────────────────────
+# UI: what the REPL draws (inherited from the user-level config; listed as the
+# sample's reference).
+#   [ui]
+#   show_thinking    = "collapsed"    # "collapsed" | "expanded" | "hidden"
+#   show_progress    = true
+#   color            = "auto"         # "auto" | "always" | "never" (NO_COLOR honoured)
+#   mouse_scroll     = true           # wheel scrollback with the prompt pinned
+#   scrollback_lines = 2000
+#   mouse_select     = true           # drag to select, release to copy
+#   copy_command     = ""             # empty => OSC 52 (SSH-friendly)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Spawn limits for the `spawn` tool (bound only what an agent creates itself;
+# `agent-cli spawn` / the REPL's /spawn are a person deciding). No effect until
+# "spawn" is in [tools] enabled above.
+#   [spawn]
+#   max_children = 4
+#   max_depth    = 2
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Shell: running `!<command>` typed at the prompt (not a tool call — outside
+# the approval gate, [tools] and [permissions]).
+#   [shell]
+#   enabled       = true
+#   timeout_ms    = 120000
+#   max_output_kb = 256
+#   context       = true      # hand the command and its output to the model
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# History: opt-in hybrid context-window management.
+#   [history]
+#   enabled            = false
+#   max_context_tokens = 24000
+#   keep_recent_turns  = 6
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MCP: external Model Context Protocol servers; every discovered tool lands as
+# `mcp__<server>__<tool>` and passes the normal approval gate.
+#   [mcp]
+#   init_timeout_ms = 15000
+#   [[mcp.servers]]                     # stdio
+#   name = "filesystem"; command = "npx"; args = [...]; env = {...}; cwd = "…"
+#   [[mcp.servers]]                     # http
+#   name = "remote"; transport = "http"; url = "…"; headers = {...};
+#   api_key_env = "MCP_API_KEY"
+# ─────────────────────────────────────────────────────────────────────────────
