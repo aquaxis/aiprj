@@ -19,11 +19,16 @@ enabled = [
   "bash",
   "read",
   "write",
+  "send_to",
+  "list_agents",
+  "stop_agent",
+  "monitor",
   "edit",
   "glob",
   "grep",
   "websearch",
   "webfetch",
+  # "spawn",        # opt-in: let the agent create detached peers of its own
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
