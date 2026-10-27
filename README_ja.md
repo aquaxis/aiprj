@@ -1,6 +1,6 @@
 # aiprj - AIプロジェクト管理ツール
 
-Claude Code向けのプロジェクト管理ツールです。AI運用ガイドラインとドキュメント構造（要件、設計、タスク）を1つのコマンドで対象ディレクトリに展開します。
+Claude Code、OpenAI Codex CLI、その他のエージェントCLI向けのプロジェクト管理ツールです。AI運用ガイドラインとドキュメント構造（要件、設計、タスク）を1つのコマンドで対象ディレクトリに展開します。
 
 ## 概要
 
@@ -9,6 +9,7 @@ aiprjは以下の機能を提供します：
 - AI運用ガイドラインとルールの定義
 - 要件定義、設計仕様、タスクリストのドキュメント構造
 - Claude Code用スラッシュコマンド（`/setup_ai` `/ai` `/update_ai` `/next_ai` `/close_ai`）
+- Codex CLI用スキル（`$setup-ai` `$ai` `$update-ai` `$next-ai` `$close-ai`）
 - 作業ログの自動保存（`.aiprj/AI_LOG/yyyy-MM-dd_NNN.md`）
 
 ## セットアップ
@@ -55,6 +56,7 @@ AIPRJ_BRANCH=develop curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/
 - `.aiprj/` - AIルール、`instructions.md`、`README.md`
 - `.claude/` - Claude Codeの設定とスラッシュコマンド
 - `.agent-cli/` - Claude Code以外のエージェントCLI向けの同等の設定とコマンド
+- `.agents/skills/` - OpenAI Codex CLI向けのスキル（上記5コマンドと同等の5件）
 - `.gitignore` - Git ignore設定（既存ファイルがある場合は先頭に追加。既に記載済みならスキップ）
 
 ### 再セットアップ時の動作
@@ -73,7 +75,7 @@ AIPRJ_BRANCH=develop curl -fsSL https://raw.githubusercontent.com/aquaxis/aiprj/
 
 | | 対象 |
 |---|---|
-| **削除される** | `.aiprj/`（ルール、instructions、作業ログ、プロジェクトドキュメント）、`.claude/commands/`と`.agent-cli/commands/`配下のaiprjスラッシュコマンド5点、`.gitignore`内のaiprj関連エントリ |
+| **削除される** | `.aiprj/`（ルール、instructions、作業ログ、プロジェクトドキュメント）、`.claude/commands/`と`.agent-cli/commands/`配下のaiprjスラッシュコマンド5点、`.agents/skills/`配下のaiprjスキル5点（ディレクトリが空になった場合のみ`.agents/`自体も削除）、`.gitignore`内のaiprj関連エントリ |
 | **保持される** | `.claude/settings.json`、`.claude/settings.local.json`、`.agent-cli/config.toml`、`.mcp.json` - ユーザーのカスタマイズを含む可能性があるため |
 
 aiprjのエントリを削除した結果`.gitignore`が空になった場合、ファイル自体が削除されます。
@@ -93,6 +95,34 @@ aiprjのエントリを削除した結果`.gitignore`が空になった場合、
 各コマンド定義は`.aiprj/rules/`内の対応するルールを`@`参照するだけの薄いラッパーです。
 例外が2つあり、`next_ai`はルール参照を持たず「次のジョブへ進む」というリテラルの指示のみ、
 `close_ai`はルール参照に加えて`exit`を含むため、ログ保存後にセッション自体が終了します。
+
+### Codex CLI用スキル
+
+同じ5つの操作は[Codexスキル](https://learn.chatgpt.com/docs/build-skills)として
+`.agents/skills/`配下にもインストールされます。プロジェクトディレクトリでCodex CLIを起動すれば
+追加設定なしで自動検出されます：
+
+| スキル | Codexでの呼び出し | 相当コマンド |
+|-------|-------------------|-------------|
+| `setup-ai` | `$setup-ai` | `/setup_ai` |
+| `ai` | `$ai` | `/ai` |
+| `update-ai` | `$update-ai` | `/update_ai` |
+| `next-ai` | `$next-ai` | `/next_ai` |
+| `close-ai` | `$close-ai` | `/close_ai` |
+
+Codexのコンポーザーで`$`を入力（または`/skills`を実行）して明示的に呼び出します。各スキルの
+`SKILL.md`は`.aiprj/rules/`の同じルールファイルを読む薄いラッパーです。CodexはClaude Codeの
+`@file`参照を展開しないため、スキル側で意味を明示しています（「`@path`とは：そのリポジトリ相対
+パスのファイルを読むこと」）。すべてのスキルには`allow_implicit_invocation: false`を設定した
+`agents/openai.yaml`が同梱され、Codexは**明示的に呼ばれたときだけ**スキルを実行します。
+無関係なプロンプトから自発的に発火することはありません。
+
+Codex特有の差異は2点です：
+
+- `$close-ai`は作業ログを保存しますがCLIを終了しません（Codexスキルはプロセスを終了できません）。
+  スキル側で`/exit`の実行を促すメッセージを出します。
+- `$next-ai`は`/next_ai`と同様に同一セッションで続きを行います。実行中のチャット内でプロンプトと
+  して呼び出されるため、コンテキストはそのまま引き継がれます。
 
 ### コマンド別の適用ルールと書き込み範囲
 
@@ -282,6 +312,21 @@ claude
 > /close_ai     # 2026-09-17_000.mdを書き出して終了
 ```
 
+Codex CLIの場合:
+
+```bash
+cd ~/work/todo-api
+codex
+```
+
+```
+$update-ai      # instructions.mdを変更した場合のみ
+$ai             # 次のタスクを実行
+$next-ai        # さらに次のタスク
+$next-ai
+$close-ai       # 2026-09-17_000.mdを書き出す（終了は手動で/exit）
+```
+
 ### 注意：プロジェクトドキュメントは既定でgit管理外
 
 同梱の`.gitignore`テンプレートは`.aiprj`に加えて`AI_LOG/`と3つの`AI_PRJ_*.md`を除外するため、
@@ -364,13 +409,21 @@ aiprj/
 └── .agent-cli/              # Claude Code互換エージェントCLI用
     ├── config.toml          # agent-cli設定（.claude/settings.jsonと同等のルール）
     └── commands/            # .claude/commands/と同一内容
+
+.agents/                     # OpenAI Codex CLI用
+└── skills/                  # Codexスキル（各SKILL.md + agents/openai.yaml）
+    ├── setup-ai/
+    ├── ai/
+    ├── update-ai/
+    ├── next-ai/
+    └── close-ai/
 ```
 
 ## 動作要件
 
 - `curl`（セットアップ用）
 - `tar`（ワンライナーフォールバック用）、または `git`
-- Claude Code CLI、またはClaude Code互換のエージェントCLI
+- Claude Code CLI、OpenAI Codex CLI、またはClaude Code互換のエージェントCLI
 - Node.js / `npx`（任意。`ccusage`ステータスライン表示用）
 
 ## ライセンス

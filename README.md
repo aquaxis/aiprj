@@ -1,6 +1,6 @@
 # aiprj - AI Project Management Tool
 
-A project management tool for Claude Code. It deploys AI operation guidelines and document structure (requirements, design, tasks) to a target directory with a single command.
+A project management tool for Claude Code, OpenAI Codex CLI, and other agent CLIs. It deploys AI operation guidelines and document structure (requirements, design, tasks) to a target directory with a single command.
 
 ## Overview
 
@@ -9,6 +9,7 @@ aiprj provides the following features:
 - Definition of AI operation guidelines and rules
 - Document structure for requirements, design specifications, and task lists
 - Slash commands for Claude Code (`/setup_ai` `/ai` `/update_ai` `/next_ai` `/close_ai`)
+- Codex CLI skills (`$setup-ai` `$ai` `$update-ai` `$next-ai` `$close-ai`)
 - Automatic work log saving (`.aiprj/AI_LOG/yyyy-MM-dd_NNN.md`)
 
 ## Setup
@@ -55,6 +56,7 @@ The following files are created by setup:
 - `.aiprj/` - AI rules, `instructions.md`, `README.md`
 - `.claude/` - Claude Code settings and slash commands
 - `.agent-cli/` - Equivalent settings and commands for agent CLIs other than Claude Code
+- `.agents/skills/` - Codex CLI skills wrapping the same five commands (`$ai` etc.)
 - `.gitignore` - Git ignore configuration (prepended to existing file if present, skipped if the entries already exist)
 
 ### Re-running the installer
@@ -73,7 +75,7 @@ only renamed to `instructions.md` when no `instructions.md` exists yet.
 
 | | Items |
 |---|---|
-| **Removed** | `.aiprj/` (rules, instructions, work logs, project documents), the five aiprj slash commands under `.claude/commands/` and `.agent-cli/commands/`, and aiprj entries in `.gitignore` |
+| **Removed** | `.aiprj/` (rules, instructions, work logs, project documents), the five aiprj slash commands under `.claude/commands/` and `.agent-cli/commands/`, the five aiprj Codex skills under `.agents/skills/` (`.agents/` itself is kept when it still contains your own skills), and aiprj entries in `.gitignore` |
 | **Preserved** | `.claude/settings.json`, `.claude/settings.local.json`, `.agent-cli/config.toml`, `.mcp.json` - these may contain your own customizations |
 
 If `.gitignore` becomes empty after the aiprj entries are removed, the file itself is deleted.
@@ -93,6 +95,34 @@ If `.gitignore` becomes empty after the aiprj entries are removed, the file itse
 Each command file is a thin wrapper that `@`-references its rule under `.aiprj/rules/`.
 Two exceptions: `next_ai` carries no rule reference (it is just the literal instruction
 "Go next job"), and `close_ai` appends `exit` so the session itself ends after the log is saved.
+
+### Codex CLI Skills
+
+The same five operations are also installed as [Codex skills](https://learn.chatgpt.com/docs/build-skills)
+under `.agents/skills/`, so the Codex CLI finds them automatically when launched in the project
+directory (no extra Codex configuration is needed):
+
+| Skill | Codex invocation | Equivalent to |
+|-------|------------------|---------------|
+| `setup-ai` | `$setup-ai` | `/setup_ai` |
+| `ai` | `$ai` | `/ai` |
+| `update-ai` | `$update-ai` | `/update_ai` |
+| `next-ai` | `$next-ai` | `/next_ai` |
+| `close-ai` | `$close-ai` | `/close_ai` |
+
+Type `$` in the Codex composer (or run `/skills`) to invoke a skill explicitly. Each skill's
+`SKILL.md` is a thin wrapper that reads the same rule file under `.aiprj/rules/`. Because Codex
+does not expand Claude Code's `@file` references, the skills state the semantics inline
+("@path means: read that repository-relative file"). Every skill ships an `agents/openai.yaml`
+with `allow_implicit_invocation: false`, so Codex only invokes it **explicitly** - the skills
+never trigger on their own from unrelated prompts.
+
+Two Codex-specific differences worth noting:
+
+- `$close-ai` saves the work log but does **not** terminate the CLI (Codex skills cannot exit
+  the process); the skill reminds you to run `/exit` yourself.
+- `$next-ai` continues in the same session exactly like `/next_ai`; the context carries over
+  because the skill is invoked as a prompt within the running chat.
 
 ### Rules and write scope per command
 
@@ -281,6 +311,21 @@ claude
 > /close_ai     # writes 2026-09-17_000.md and exits
 ```
 
+The same day with Codex CLI instead of Claude Code:
+
+```bash
+cd ~/work/todo-api
+codex
+```
+
+```
+> $update-ai    # only if instructions.md changed
+> $ai           # work the next task
+> $next-ai      # and the one after
+> $next-ai
+> $close-ai     # writes 2026-09-17_000.md, then /exit yourself
+```
+
 ### Note: the project documents are git-ignored by default
 
 The bundled `.gitignore` template ignores `.aiprj` along with `AI_LOG/` and the three
@@ -364,13 +409,20 @@ aiprj/
 └── .agent-cli/              # For Claude Code compatible agent CLIs
     ├── config.toml          # agent-cli settings (same rules as .claude/settings.json)
     └── commands/            # Identical to .claude/commands/
+└── .agents/                 # For OpenAI Codex CLI
+    └── skills/              # Codex skills (SKILL.md + agents/openai.yaml each)
+        ├── setup-ai/
+        ├── ai/
+        ├── update-ai/
+        ├── next-ai/
+        └── close-ai/
 ```
 
 ## Requirements
 
 - `curl` (for setup)
 - `tar` (for one-liner fallback), or `git`
-- Claude Code CLI, or a Claude Code compatible agent CLI
+- Claude Code CLI, OpenAI Codex CLI, or a Claude Code compatible agent CLI
 - Node.js / `npx` (optional - only for the `ccusage` status line)
 
 ## License

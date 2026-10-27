@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-AIPRJ_VERSION="1.1.0"
+AIPRJ_VERSION="1.2.0"
 REPO_URL="https://github.com/aquaxis/aiprj.git"
 BRANCH="${AIPRJ_BRANCH:-main}"
 ARCHIVE_URL="https://github.com/aquaxis/aiprj/archive/${BRANCH}.tar.gz"
@@ -62,8 +62,10 @@ uninstall_aiprj() {
   HAS_AIPRJ=0
   [ -d "$DIR/.aiprj" ] && HAS_AIPRJ=1
   for cmd in setup_ai ai update_ai next_ai close_ai; do
+    skill="$(echo "$cmd" | tr '_' '-')"
     [ -f "$DIR/.claude/commands/$cmd.md" ] && HAS_AIPRJ=1
     [ -f "$DIR/.agent-cli/commands/$cmd.md" ] && HAS_AIPRJ=1
+    [ -f "$DIR/.agents/skills/$skill/SKILL.md" ] && HAS_AIPRJ=1
   done
 
   if [ "$HAS_AIPRJ" -eq 0 ]; then
@@ -75,8 +77,10 @@ uninstall_aiprj() {
     echo "The following will be removed:"
     [ -d "$DIR/.aiprj" ] && echo "  - $DIR/.aiprj/ (rules, instructions, work logs, project docs)"
     for cmd in setup_ai ai update_ai next_ai close_ai; do
+      skill="$(echo "$cmd" | tr '_' '-')"
       [ -f "$DIR/.claude/commands/$cmd.md" ] && echo "  - $DIR/.claude/commands/$cmd.md"
       [ -f "$DIR/.agent-cli/commands/$cmd.md" ] && echo "  - $DIR/.agent-cli/commands/$cmd.md"
+      [ -d "$DIR/.agents/skills/$skill" ] && echo "  - $DIR/.agents/skills/$skill/ (Codex skill)"
     done
     [ -f "$DIR/.gitignore" ] && echo "  - aiprj entries in $DIR/.gitignore"
     echo "The following will be preserved (may contain user customizations):"
@@ -98,6 +102,7 @@ uninstall_aiprj() {
   fi
 
   for cmd in setup_ai ai update_ai next_ai close_ai; do
+    skill="$(echo "$cmd" | tr '_' '-')"
     if [ -f "$DIR/.claude/commands/$cmd.md" ]; then
       rm -f "$DIR/.claude/commands/$cmd.md"
       echo "Removed: $DIR/.claude/commands/$cmd.md"
@@ -105,6 +110,10 @@ uninstall_aiprj() {
     if [ -f "$DIR/.agent-cli/commands/$cmd.md" ]; then
       rm -f "$DIR/.agent-cli/commands/$cmd.md"
       echo "Removed: $DIR/.agent-cli/commands/$cmd.md"
+    fi
+    if [ -d "$DIR/.agents/skills/$skill" ]; then
+      rm -rf "$DIR/.agents/skills/$skill"
+      echo "Removed: $DIR/.agents/skills/$skill/ (Codex skill)"
     fi
   done
 
@@ -116,9 +125,19 @@ uninstall_aiprj() {
     rmdir "$DIR/.agent-cli/commands"
   fi
 
+  # Codex skills: only prune .agents/skills/.agents when they are empty, so
+  # directories that hold user's own skills are kept intact.
+  if [ -d "$DIR/.agents/skills" ] && [ -z "$(ls -A "$DIR/.agents/skills")" ]; then
+    rmdir "$DIR/.agents/skills"
+    if [ -d "$DIR/.agents" ] && [ -z "$(ls -A "$DIR/.agents")" ]; then
+      rmdir "$DIR/.agents"
+      echo "Removed: $DIR/.agents/ (empty after cleanup)"
+    fi
+  fi
+
   if [ -f "$DIR/.gitignore" ]; then
     TMP_GI="$(mktemp)"
-    grep -vxF -e ".aiprj" -e "AI_LOG/" -e "AI_PRJ_REQUIREMENTS.md" -e "AI_PRJ_DESIGN.md" -e "AI_PRJ_TASKS.md" "$DIR/.gitignore" > "$TMP_GI" || true
+    grep -vxF -e ".aiprj" -e ".agents" -e "AI_LOG/" -e "AI_PRJ_REQUIREMENTS.md" -e "AI_PRJ_DESIGN.md" -e "AI_PRJ_TASKS.md" "$DIR/.gitignore" > "$TMP_GI" || true
     if [ -s "$TMP_GI" ]; then
       mv "$TMP_GI" "$DIR/.gitignore"
       echo "Cleaned: $DIR/.gitignore"
@@ -229,7 +248,7 @@ if [ -n "$SRC_ABS" ] && [ "$SRC_ABS" = "$DIR_ABS" ]; then
 fi
 
 # Copy template files
-for d in .aiprj .claude .agent-cli; do
+for d in .aiprj .claude .agent-cli .agents; do
   if [ -d "$SRC/$d" ]; then
     cp -r "$SRC/$d" "$DIR/"
   fi
