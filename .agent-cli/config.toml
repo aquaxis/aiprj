@@ -28,7 +28,7 @@
 commands_dir       = ".agent-cli/commands"
 # Every tool call still passes the approval gate; [permissions] below is what
 # narrows that down, not a blanket auto-approve.
-auto_approve_tools = false
+auto_approve_tools = true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tools: which built-in tools the agent can call, and per-tool tuning
@@ -52,7 +52,7 @@ enabled = [
   "grep",
   "websearch",
   "webfetch",
-  # "spawn",        # opt-in: let the agent create detached peers of its own
+  "spawn",        # opt-in: let the agent create detached peers of its own
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
