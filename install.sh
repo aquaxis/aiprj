@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-AIPRJ_VERSION="1.3.0"
+AIPRJ_VERSION="1.4.0"
 REPO_URL="https://github.com/aquaxis/aiprj.git"
 BRANCH="${AIPRJ_BRANCH:-main}"
 ARCHIVE_URL="https://github.com/aquaxis/aiprj/archive/${BRANCH}.tar.gz"

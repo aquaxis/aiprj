@@ -4,39 +4,157 @@
 # merged over `~/.config/agent-cli/config.toml` key by key, so only what aiprj
 # actually needs is set here — your provider, UI and history settings are kept.
 #
-# Confirm the resolved chain with: agent-cli config path
+# Confirm the resolved chain with:  agent-cli config path
+# Show the merged result with:      agent-cli config show
 #
-# Structure follows example/config.example.toml of agent-cli v0.26.0; sections
+# Structure follows example/config.example.toml of agent-cli v0.49.0; sections
 # aiprj does not change are present as their sample comments so the surface
 # stays discoverable without setting anything extra.
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Runtime behavior and paths. aiprj sets exactly two keys — everything below
-# them (log_dir / registry_dir / agents_dir / persona_file / max_tool_iterations
-# / group) is inherited from the user-level config or the defaults:
+# Provider: the AI backend. Only one `kind` is active at a time; the
+# user-level config decides it, aiprj does not override.
+# Supported: "claude" | "claude-cli" | "codex" | "codex-cli" | "strata" |
+#            "ollama" | "opencode" | "opencode-go" | "llama.cpp"
+# (v0.49.0 renames the two CLI-driver kinds: "claude-code" -> "claude-cli",
+#  "codex-code" -> "codex-cli" — a config still using the old names must be
+#  updated; the child binaries and wire behavior are unchanged.)
+# The current sample (v0.49.0), all commented:
+# ─────────────────────────────────────────────────────────────────────────────
+# [provider]
+# kind = "claude"
+#
+# --- Anthropic Claude (Messages API) ---
+# [provider.claude]
+# model       = "claude-opus-5-5"
+# api_key_env = "ANTHROPIC_API_KEY"
+# base_url    = "https://api.anthropic.com"
+# thinking    = true
+# # prompt_cache = true        # opt-in: system + tools + conversation tail
+#
+# --- Claude Code CLI (drives the locally installed `claude` binary) ---
+# No API key: it inherits whatever authentication Claude Code already has.
+# Not the same backend as [provider.claude] above, which is the Anthropic API.
+# [provider.claude-cli]
+# bin       = "claude"       # executable name (resolved via PATH) or full path
+# model     = "opus"         # --model; omit for Claude Code's own default
+# mode      = "delegation"   # "delegation" (Claude Code runs its own tools)
+#                            # | "gateway"  (--tools "", chat only: agent-cli's
+#                            #               tools cannot be offered to it)
+# transport = "stream"       # "stream" (token streaming) | "oneshot"
+# session   = "persistent"   # "persistent" | "ephemeral" (delegation only)
+# turn_timeout_secs  = 900
+# tools              = ["Bash", "Read"]  # --tools
+# allowed_tools      = ["Bash(git *)"]   # --allowed-tools
+# disallowed_tools   = ["WebFetch"]      # --disallowed-tools
+# permission_mode    = "auto"            # --permission-mode
+# max_budget_usd     = 1.0               # --max-budget-usd
+# system_prompt_mode = "append"          # "append" | "replace"
+# extra_args         = []                # passed through verbatim
+#
+# --- Codex CLI (drives the locally installed `codex` binary) ---
+# No API key: it uses whatever authentication Codex itself already has
+# (e.g. a ChatGPT login). Delegation only — codex runs its own tools inside
+# its own sandbox; agent-cli's tools cannot be offered to it.
+# [provider.codex-cli]
+# bin        = "codex"              # executable name (resolved via PATH) or path
+# model      = "gpt-5.6-terra"      # -m; omit to use Codex's own default
+# transport  = "items"              # "items" (--json item stream) | "oneshot"
+#                                   # ("oneshot" buffers the whole turn and
+#                                   #  yields the final reply once, via -o)
+# session    = "persistent"         # "persistent" (resume the codex thread)
+#                                   # | "ephemeral" (--ephemeral, sessionless)
+# sandbox           = "workspace-write"  # -s read-only|workspace-write|danger-full-access
+# add_dir           = []                 # --add-dir, repeated per directory
+# approval_policy   = "never"            # -c approval_policy=...
+# bypass_sandbox_and_approvals = false   # --dangerously-bypass-approvals-and-sandbox
+# skip_git_repo_check = true            # --skip-git-repo-check
+# turn_timeout_secs = 900
+# extra_args        = []                 # passed through verbatim
+#
+# --- OpenAI (Codex) ---
+# [provider.codex]
+# model       = "gpt-5.6-terra"
+# api_key_env = "OPENAI_API_KEY"
+# base_url    = "https://api.openai.com/v1"
+#
+# --- Strata (local OpenAI-compatible engine) ---
+# [provider.strata]
+# model    = "strata"
+# base_url = "http://127.0.0.1:8080/v1"
+#
+# --- Ollama (local or cloud tag, OpenAI-compatible /api/chat) ---
+# [provider.ollama]
+# model    = "glm-5.3-flash:cloud"
+# base_url = "http://127.0.0.1:11434"
+#
+# --- OpenCode (local `opencode serve` or OpenCode Zen / Go cloud) ---
+# [provider.opencode]
+# # Local mode:
+# base_url = "http://127.0.0.1:4096"
+# model    = "claude-sonnet-5-5"
+# # Cloud mode (OpenCode Zen / Go): a resolved api_key_env selects cloud mode.
+# base_url    = "https://opencode.ai/zen/go/v1"
+# api_key_env = "OPENCODE_API_KEY"
+# # Go serves open-weight models only (claude-* is on .../zen/v1, not /zen/go/v1).
+# # List what an endpoint serves with GET {base_url}/models.
+# model       = "minimax-m3.1-flash"
+# # Wire format: "openai" (default, /chat/completions) or "anthropic" (/messages).
+# api = "openai"
+# # Cloud only: the x-opencode-session id sent with every request. Generated per
+# # process when unset — set it only to pin one id across restarts.
+# session_id = "ses_my_stable_id"
+# # Opt-in (local mode only): reuse one server session across turns.
+# persistent_session = true
+#
+# --- llama.cpp /v1/chat/completions (OpenAI-compatible) ---
+# [provider."llama.cpp"]
+# model    = "default"
+# base_url = "http://127.0.0.1:8080"
+# # Optional sampling knobs (omit any => the server's own default):
+# # max_tokens / temperature / top_k / top_p / min_p /
+# # repeat_penalty / repeat_last_n / seed
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Runtime behavior and paths. aiprj sets exactly two keys — everything else
+# (log_dir / registry_dir / agents_dir / persona_file / max_tool_iterations /
+# group) is inherited from the user-level config or the defaults:
 #   [runtime]
 #   log_dir             = "~/.local/share/agent-cli/logs"
 #   registry_dir        = ""            # => per-user default (/run/user/<uid>/agent-cli)
 #   agents_dir          = "~/.config/agent-cli/agents"
 #   persona_file        = ""            # => built-in default persona
-#   max_tool_iterations = 24
-#   # group = ""                        # default group id for spawned agents
-# ─────────────────────────────────────────────────────────────────────��───────
+#   max_tool_iterations = 24            # LLM call -> tool calls per turn
+#   # group = ""                        # default group id for spawned agents;
+                                        # --group overrides, `agent-cli groups`
+                                        # lists running cohorts
+# ─────────────────────────────────────────────────────────────────────────────
 [runtime]
 # Where the aiprj slash commands (/setup_ai /ai /update_ai /next_ai /close_ai)
 # are read from. Relative to the current working directory.
 commands_dir       = ".agent-cli/commands"
-# Every tool call still passes the approval gate; [permissions] below is what
-# narrows that down, not a blanket auto-approve.
+# aiprj default (v1.3.0): approve every tool call without the y/N prompt. Each
+# call still passes [permissions] below — its deny rules always win, with or
+# without auto-approval.
 auto_approve_tools = true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Tools: which built-in tools the agent can call, and per-tool tuning
-# (bash/read/write/send_to/list_agents/stop_agent/monitor/edit/glob/grep/
-# websearch/webfetch plus the opt-in "spawn"). Per-tool blocks —
+# Tools: which built-in tools the agent can call, and per-tool tuning.
+# Tool set is aligned with Claude Code:
+#   bash, read, write, send_to, list_agents, stop_agent, monitor, edit, glob,
+#   grep, websearch, webfetch
+# aiprj default (v1.3.0): "spawn" is enabled — the agent may create detached
+# peers of its own, bounded by the [spawn] section below.
+# Per-tool blocks are inherited from the user-level config; nothing aiprj
+# tunes here:
 #   [tools.bash]      timeout_ms = 120000 / max_output_kb = 256
-#   [tools.websearch] api_key_env / endpoint / provider ("tavily")
-# — are inherited from the user-level config; nothing aiprj tunes here.
+#                     (the legacy [tools.shell] block is still accepted as an
+#                      alias, but its timeout_secs is ignored — use timeout_ms)
+#   [tools.websearch] api_key_env / endpoint / provider ("tavily"); when
+#                     endpoint / api_key_env are unset, the tool returns a
+#                     clear configuration error instead of failing
+# Backward compatibility: the pre-rename names ("shell", "fs_read", "fs_write")
+# are still accepted in `enabled` and map to bash / read / write respectively.
 # ─────────────────────────────────────────────────────────────────────────────
 [tools]
 enabled = [
@@ -52,13 +170,33 @@ enabled = [
   "grep",
   "websearch",
   "webfetch",
-  "spawn",        # opt-in: let the agent create detached peers of its own
+  "spawn",         # aiprj default (v1.3.0): let the agent create detached peers
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Permissions. A guardrail against mistakes, not a sandbox: only the leading
-# words of a command are inspected, so a deny does not stop `sh -c ...`.
-# Precedence: deny > allow > default_mode.
+# Spawn: how far an agent may go in creating agents of its own. These bound the
+# `spawn` *tool* (the path the model takes on its own); `agent-cli spawn` and
+# the REPL's /spawn are a person deciding and are not bounded. Spawn is enabled
+# by default in aiprj (v1.3.0), so these limits are live. exit_when_idle
+# (default true) makes spawn-launched headless peers end their session once
+# their work is done, instead of standing by forever.
+# ─────────────────────────────────────────────────────────────────────────────
+[spawn]
+max_children = 4          # live direct children per agent (0 disables spawning)
+max_depth    = 2          # depth of the spawn chain (0 disables spawning)
+# exit_when_idle = true   # peers exit when the queue goes quiet
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Permissions: per-call rules for tools the model asks to run. A guardrail
+# against mistakes, NOT a sandbox: only the leading words of a command are
+# inspected, so a deny does not stop `sh -c ...`. Names match case-insensitively
+# and ignoring `_`, so rules copied from a Claude Code settings file
+# (`Bash(git:*)`, `WebFetch(...)`) work unedited. The gated argument per tool:
+# `command` for bash/monitor, `file_path` for read/write/edit, `path` for
+# glob/grep, the host of `url` for webfetch, `peer` for send_to/stop_agent;
+# websearch, list_agents, spawn and mcp__* tools have none, so only the bare
+# tool name applies. Precedence: deny > allow > default_mode, and a deny also
+# outranks auto_approve_tools — the only thing in front of auto-approving paths.
 # ─────────────────────────────────────────────────────────────────────────────
 [permissions]
 deny = [
@@ -82,63 +220,7 @@ allow = [
   "grep",
   "webfetch(domain:*)",
 ]
-default_mode = "ask"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Provider: the AI backend (claude | claude-code | codex | ollama | opencode |
-# opencode-go | llama.cpp). The user-level config decides it; aiprj does not
-# override. The current sample (v0.26.0), all commented:
-# ─────────────────────────────────────────────────────────────────────────────
-# [provider]
-# kind = "claude"
-#
-# [provider.claude]
-# model       = "claude-opus-4-7"
-# api_key_env = "ANTHROPIC_API_KEY"
-# base_url    = "https://api.anthropic.com"
-# thinking    = true
-# # prompt_cache = true        # opt-in: system + tools + conversation tail
-#
-# [provider.claude-code]
-# bin       = "claude"
-# model     = "sonnet"
-# mode      = "delegation"      # or "gateway" (--tools "", chat only)
-# transport = "stream"          # or "oneshot"
-# session   = "persistent"      # or "ephemeral" (delegation only)
-# turn_timeout_secs  = 900
-# tools              = ["Bash", "Read"]
-# allowed_tools      = ["Bash(git *)"]
-# disallowed_tools   = ["WebFetch"]
-# permission_mode    = "auto"
-# max_budget_usd     = 1.0
-# system_prompt_mode = "append"       # or "replace"
-# extra_args         = []             # passed through verbatim
-#
-# [provider.codex]
-# model       = "gpt-4.1"
-# api_key_env = "OPENAI_API_KEY"
-# base_url    = "https://api.openai.com/v1"
-#
-# [provider.ollama]
-# model    = "glm-5.1:cloud"
-# base_url = "http://127.0.0.1:11434"
-#
-# [provider.opencode]
-# # Local:  base_url = "http://127.0.0.1:4096" / model = "claude-sonnet-4-5"
-# # Cloud:  a resolved api_key_env selects the cloud mode; Go serves
-# #         open-weight models only (GET {base_url}/models lists them).
-# base_url    = "https://opencode.ai/zen/go/v1"
-# api_key_env = "OPENCODE_API_KEY"
-# model       = "qwen3.8-max"
-# api         = "openai"              # or "anthropic" (/messages)
-# session_id  = "ses_my_stable_id"    # cloud only; generated per process if unset
-# persistent_session = true           # opt-in, local mode only
-#
-# [provider."llama.cpp"]
-# model    = "default"
-# base_url = "http://127.0.0.1:8080"
-# # max_tokens / temperature / top_k / top_p / min_p /
-# # repeat_penalty / repeat_last_n / seed
+default_mode = "ask"          # "ask" (default) | "allow" | "deny"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # UI: what the REPL draws (inherited from the user-level config; listed as the
@@ -148,32 +230,26 @@ default_mode = "ask"
 #   show_progress    = true
 #   color            = "auto"         # "auto" | "always" | "never" (NO_COLOR honoured)
 #   mouse_scroll     = true           # wheel scrollback with the prompt pinned
-#   scrollback_lines = 2000
+#   scrollback_lines = 2000           # 0 disables the wheel scrollback
 #   mouse_select     = true           # drag to select, release to copy
-#   copy_command     = ""             # empty => OSC 52 (SSH-friendly)
-# ─────────────────────────────────────────────────────────────────────────────
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Spawn limits for the `spawn` tool (bound only what an agent creates itself;
-# `agent-cli spawn` / the REPL's /spawn are a person deciding). No effect until
-# "spawn" is in [tools] enabled above.
-#   [spawn]
-#   max_children = 4
-#   max_depth    = 2
+#   copy_command     = ""             # empty => OSC 52 (SSH-friendly); e.g.
+#                                      # "wl-copy" / "xclip -selection clipboard"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Shell: running `!<command>` typed at the prompt (not a tool call — outside
-# the approval gate, [tools] and [permissions]).
+# the approval gate, [tools] and [permissions]; listed as the sample's
+# reference, inherited from the user-level config).
 #   [shell]
-#   enabled       = true
-#   timeout_ms    = 120000
-#   max_output_kb = 256
+#   enabled       = true      # false => a `!` line is sent to the model as a prompt
+#   timeout_ms    = 120000    # kill the whole job after this long
+#   max_output_kb = 256       # how much of the output the model is given
 #   context       = true      # hand the command and its output to the model
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ─────────────────────────────────────────────────────────────────────────────
-# History: opt-in hybrid context-window management.
+# History: opt-in hybrid context-window management (inherited; reference only).
+# When disabled (default), the full conversation is replayed verbatim each turn.
 #   [history]
 #   enabled            = false
 #   max_context_tokens = 24000
@@ -181,13 +257,23 @@ default_mode = "ask"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MCP: external Model Context Protocol servers; every discovered tool lands as
-# `mcp__<server>__<tool>` and passes the normal approval gate.
+# MCP: external Model Context Protocol servers (inherited; reference only).
+# Every discovered tool is registered as `mcp__<server>__<tool>` and passes the
+# normal approval gate. A server that fails to start or handshake is logged
+# and skipped.
 #   [mcp]
-#   init_timeout_ms = 15000
-#   [[mcp.servers]]                     # stdio
-#   name = "filesystem"; command = "npx"; args = [...]; env = {...}; cwd = "…"
-#   [[mcp.servers]]                     # http
-#   name = "remote"; transport = "http"; url = "…"; headers = {...};
-#   api_key_env = "MCP_API_KEY"
+#   init_timeout_ms = 15000          # handshake + tools/list timeout per server
+#   [[mcp.servers]]                  # stdio (a local process)
+#   name    = "filesystem"
+#   command = "npx"
+#   args    = ["-y", "@modelcontextprotocol/server-filesystem", "/srv/data"]
+#   env     = { NODE_ENV = "production" }
+#   cwd     = "/srv/data"
+#   enabled = true
+#   [[mcp.servers]]                  # http (Streamable HTTP)
+#   name        = "remote"
+#   transport   = "http"
+#   url         = "https://mcp.example.com/mcp"
+#   headers     = { X-Tenant = "acme" }
+#   api_key_env = "MCP_API_KEY"      # sent as `Authorization: Bearer <value>`
 # ─────────────────────────────────────────────────────────────────────────────
