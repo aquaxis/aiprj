@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-AIPRJ_VERSION="1.4.0"
+AIPRJ_VERSION="1.5.0"
 REPO_URL="https://github.com/aquaxis/aiprj.git"
 BRANCH="${AIPRJ_BRANCH:-main}"
 ARCHIVE_URL="https://github.com/aquaxis/aiprj/archive/${BRANCH}.tar.gz"
@@ -137,7 +137,7 @@ uninstall_aiprj() {
 
   if [ -f "$DIR/.gitignore" ]; then
     TMP_GI="$(mktemp)"
-    grep -vxF -e ".aiprj" -e ".agents" -e "AI_LOG/" -e "AI_PRJ_REQUIREMENTS.md" -e "AI_PRJ_DESIGN.md" -e "AI_PRJ_TASKS.md" "$DIR/.gitignore" > "$TMP_GI" || true
+    grep -vxF -e ".aiprj" -e ".agent-cli" -e ".agents" -e "AI_LOG/" -e "AI_PRJ_REQUIREMENTS.md" -e "AI_PRJ_DESIGN.md" -e "AI_PRJ_TASKS.md" "$DIR/.gitignore" > "$TMP_GI" || true
     if [ -s "$TMP_GI" ]; then
       mv "$TMP_GI" "$DIR/.gitignore"
       echo "Cleaned: $DIR/.gitignore"
@@ -269,13 +269,20 @@ elif [ -f "$DIR/.aiprj/instructions.md.org" ]; then
   mv "$DIR/.aiprj/instructions.md.org" "$DIR/.aiprj/instructions.md"
 fi
 
-# Manage .gitignore (prevent duplicates)
+# Manage .gitignore (append only the entries that are missing, so an existing
+# .gitignore that already lists some aiprj paths still gets the rest)
 if [ -f "$DIR/.gitignore" ]; then
-  if ! grep -qxF ".aiprj" "$DIR/.gitignore"; then
-    TMP_GI="$(mktemp)"
-    cat "$SRC/.gitignore.aiprj" "$DIR/.gitignore" > "$TMP_GI"
-    mv "$TMP_GI" "$DIR/.gitignore"
+  # Make sure appended entries start on their own line
+  if [ -s "$DIR/.gitignore" ] && [ -n "$(tail -c 1 "$DIR/.gitignore")" ]; then
+    echo "" >> "$DIR/.gitignore"
   fi
+  while IFS= read -r entry || [ -n "$entry" ]; do
+    [ -n "$entry" ] || continue
+    if ! grep -qxF "$entry" "$DIR/.gitignore"; then
+      printf '%s\n' "$entry" >> "$DIR/.gitignore"
+      echo "Added to $DIR/.gitignore: $entry"
+    fi
+  done < "$SRC/.gitignore.aiprj"
 else
   cp "$SRC/.gitignore.aiprj" "$DIR/.gitignore"
 fi
