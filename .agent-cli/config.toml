@@ -7,7 +7,7 @@
 # Confirm the resolved chain with:  agent-cli config path
 # Show the merged result with:      agent-cli config show
 #
-# Structure follows example/config.example.toml of agent-cli v0.49.0; sections
+# Structure follows example/config.example.toml of agent-cli v0.53.0; sections
 # aiprj does not change are present as their sample comments so the surface
 # stays discoverable without setting anything extra.
 
@@ -19,7 +19,7 @@
 # (v0.49.0 renames the two CLI-driver kinds: "claude-code" -> "claude-cli",
 #  "codex-code" -> "codex-cli" — a config still using the old names must be
 #  updated; the child binaries and wire behavior are unchanged.)
-# The current sample (v0.49.0), all commented:
+# The current sample (v0.53.0), all commented:
 # ─────────────────────────────────────────────────────────────────────────────
 # [provider]
 # kind = "claude"
@@ -228,6 +228,11 @@ default_mode = "ask"          # "ask" (default) | "allow" | "deny"
 #   [ui]
 #   show_thinking    = "collapsed"    # "collapsed" | "expanded" | "hidden"
 #   show_progress    = true
+#   show_tool_results = true         # false silences the whole tool traffic on
+#                                     # screen (both [tool-call]/[tool-result]
+#                                     # lines, as one choice); the model and the
+#                                     # conversation log still receive every call
+#                                     # and result in full
 #   color            = "auto"         # "auto" | "always" | "never" (NO_COLOR honoured)
 #   mouse_scroll     = true           # wheel scrollback with the prompt pinned
 #   scrollback_lines = 2000           # 0 disables the wheel scrollback
