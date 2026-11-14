@@ -26,5 +26,5 @@ name: Execution Details
 description: Task-specific instructions for this session.
 ---
 
-Task: Execute the instructions listed in @.aiprj/instructions.md.
+Task: Execute the instructions listed in @.aiprj/instructions.md. Do not stop until all work is complete. Even if you consider the task "complete" at some point, continue working if there are any unfinished items, and report completion only after all items have been completed.
 Thinking & Output language: English
